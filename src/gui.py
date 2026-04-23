@@ -309,8 +309,10 @@ class PumpCalculatorGUI:
         scrollbar.config(command=self.result_text.yview)
         
         # 초기 메시지
-        self.update_result_display("계산 결과가 여기에 표시됩니다.\n\n"
-                                 "입력을 완료한 후 '계산하기' 버튼을 클릭하세요.")
+        self.result_text.config(state=tk.NORMAL)
+        self.result_text.insert('1.0', "계산 결과가 여기에 표시됩니다\n\n"
+                                     "입력을 완료한 후 '계산하기' 버튼을 클릭하세요.")
+        self.result_text.config(state=tk.DISABLED)
     
     def on_mode_changed(self, *args):
         """모드 변경 시 호출되는 함수"""
@@ -321,9 +323,93 @@ class PumpCalculatorGUI:
     
     def calculate(self):
         """계산 실행 함수"""
-        # TODO: Phase 3에서 구현 예정
-        self.update_result_display("계산 기능은 Phase 3에서 구현됩니다.\n"
-                                 "현재는 GUI 레이아웃만 완성되었습니다.")
+        try:
+            # 1. 입력값 가져오기 및 검증
+            # 필수 입력값
+            flow_str = self.flow_var.get().strip()
+            head_str = self.head_var.get().strip()
+            
+            if not flow_str or not head_str:
+                raise ValueError("유량과 실양정을 입력하세요")
+            
+            flow_rate = float(flow_str)
+            static_head = float(head_str)
+            num_pumps = int(self.pumps_var.get())
+            
+            # 2. 빈 값 또는 0 이하 체크
+            if flow_rate <= 0:
+                raise ValueError("유량은 0보다 커야 합니다")
+            if static_head < 0:
+                raise ValueError("실양정은 0 이상이어야 합니다")
+            if num_pumps <= 0:
+                raise ValueError("펌프 대수는 0보다 커야 합니다")
+            
+            # 3. 옵션 값 가져오기
+            safety_margin = float(self.safety_var.get()) if self.safety_var.get().strip() else 1.5
+            pump_efficiency = float(self.efficiency_var.get()) if self.efficiency_var.get().strip() else 0.70
+            motor_safety_factor = float(self.motor_safety_var.get()) if self.motor_safety_var.get().strip() else 1.15
+            
+            # 옵션 값 검증
+            if safety_margin < 0:
+                raise ValueError("여유 수두는 0 이상이어야 합니다")
+            if pump_efficiency <= 0 or pump_efficiency > 1:
+                raise ValueError("펌프 효율은 0 초과 1 이하이어야 합니다")
+            if motor_safety_factor <= 0:
+                raise ValueError("모터 여유율은 0보다 커야 합니다")
+            
+            # 4. 모드별 파라미터 처리
+            mode = self.mode_var.get()
+            calc_params = {
+                'mode': mode,
+                'flow_rate': flow_rate,
+                'static_head': static_head,
+                'electrical_type': self.electrical_var.get(),
+                'num_pumps': num_pumps,
+                'safety_margin': safety_margin,
+                'pump_efficiency': pump_efficiency,
+                'motor_safety_factor': motor_safety_factor,
+            }
+            
+            if mode == 'standard':
+                # 일반 양정 모드
+                pipe_loss_str = self.pipe_loss_var.get().strip()
+                pipe_loss = float(pipe_loss_str) if pipe_loss_str else 0.0
+                
+                if pipe_loss < 0:
+                    raise ValueError("관로 손실은 0 이상이어야 합니다")
+                
+                calc_params['pipe_loss'] = pipe_loss
+                
+            else:  # mode == 'pressure'
+                # 압송 관로 모드
+                pipe_length_str = self.pipe_length_var.get().strip()
+                pipe_diameter_str = self.pipe_diameter_var.get().strip()
+                
+                if not pipe_length_str or not pipe_diameter_str:
+                    raise ValueError("압송 모드에서는 거리와 관경을 입력하세요")
+                
+                pipe_length = float(pipe_length_str)
+                pipe_diameter = float(pipe_diameter_str)
+                
+                if pipe_length <= 0:
+                    raise ValueError("압송 거리는 0보다 커야 합니다")
+                if pipe_diameter <= 0:
+                    raise ValueError("관경은 0보다 커야 합니다")
+                
+                calc_params['pipe_length'] = pipe_length
+                calc_params['pipe_diameter'] = pipe_diameter
+                calc_params['pipe_material'] = self.pipe_material_var.get()
+            
+            # 5. 계산 실행
+            result = calculate_complete_pump_spec(**calc_params)
+            
+            # 6. 결과 표시
+            self.display_result(result)
+            
+        except ValueError as e:
+            self.show_error(f"입력 오류: {str(e)}")
+        except Exception as e:
+            self.show_error(f"계산 오류: {str(e)}")
     
     def reset_inputs(self):
         """입력 필드 초기화"""
@@ -343,11 +429,72 @@ class PumpCalculatorGUI:
         self.update_result_display("입력 필드가 초기화되었습니다.\n"
                                  "새로운 값을 입력한 후 '계산하기' 버튼을 클릭하세요.")
     
-    def update_result_display(self, text):
-        """결과 표시 영역 업데이트"""
+    def display_result(self, result):
+        """결과 표시 함수"""
+        # 결과 Text 위젯 초기화
         self.result_text.config(state=tk.NORMAL)
-        self.result_text.delete(1.0, tk.END)
-        self.result_text.insert(1.0, text)
+        self.result_text.delete('1.0', tk.END)
+        
+        # 결과 포맷팅
+        output = "=" * 50 + "\n"
+        output += " 펌프 용량 계산 결과\n"
+        output += "=" * 50 + "\n\n"
+        
+        # 모드 이름 변환
+        mode_name = '일반 양정' if result['mode'] == 'standard' else '압송 관로'
+        
+        # 전기 방식 이름 변환
+        if result['electrical_type'] == '3phase':
+            electrical_name = f'삼상 {result["voltage"]}V'
+        else:
+            electrical_name = f'단상 {result["voltage"]}V'
+        
+        output += f"계산 모드: {mode_name}\n"
+        output += f"전양정: {result['total_head']:.2f} m\n"
+        output += f"펌프당 유량: {result['flow_per_pump']:.2f} ㎥/hr\n"
+        output += f"펌프 동력: {result['pump_power']:.2f} kW\n"
+        output += f"모터 용량: {result['motor_power']:.2f} kW\n"
+        output += f"전기 방식: {electrical_name}\n"
+        output += f"전류: {result['current']:.2f} A\n"
+        
+        # 압송 모드 추가 정보
+        if result['mode'] == 'pressure':
+            output += f"\n[압송 관로 상세]\n"
+            output += f"마찰 손실: {result['friction_loss']:.2f} m\n"
+            output += f"잔압 환산: {result['residual_head']:.2f} m\n"
+            output += f"유속: {result['velocity']:.2f} m/s\n"
+        
+        output += "\n" + "=" * 50
+        
+        # 결과 표시
+        self.result_text.insert('1.0', output)
+        self.result_text.config(state=tk.DISABLED)
+    
+    def show_error(self, message):
+        """에러 메시지 표시"""
+        from tkinter import messagebox
+        messagebox.showerror("오류", message)
+    
+    def reset_inputs(self):
+        """입력 필드 초기화"""
+        self.flow_var.set('')
+        self.head_var.set('')
+        self.pumps_var.set(1)
+        self.pipe_loss_var.set('0')
+        self.pipe_length_var.set('')
+        self.pipe_diameter_var.set('')
+        self.pipe_material_var.set('PVC')
+        self.safety_var.set('1.5')
+        self.efficiency_var.set('0.70')
+        self.motor_safety_var.set('1.15')
+        self.mode_var.set('standard')
+        self.electrical_var.set('3phase')
+        
+        # 결과 영역 초기화
+        self.result_text.config(state=tk.NORMAL)
+        self.result_text.delete('1.0', tk.END)
+        self.result_text.insert('1.0', "계산 결과가 여기에 표시됩니다\n\n"
+                                     "입력을 완료한 후 '계산하기' 버튼을 클릭하세요.")
         self.result_text.config(state=tk.DISABLED)
 
 
