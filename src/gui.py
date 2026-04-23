@@ -82,8 +82,8 @@ class PumpCalculatorGUI:
         right_frame = ttk.Frame(main_container)
 
         # PanedWindow에 추가
-        main_container.add(left_frame, weight=700)  # 왼쪽 700
-        main_container.add(right_frame, weight=400)  # 오른쪽 400
+        main_container.add(left_frame, weight=800)  # 왼쪽 800
+        main_container.add(right_frame, weight=200)  # 오른쪽 200
 
         # 왼쪽 영역 UI 생성
         self.create_left_panel(left_scroll_frame)
