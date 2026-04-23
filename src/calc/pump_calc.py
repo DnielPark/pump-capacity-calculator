@@ -11,11 +11,14 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from config import (
     GRAVITY, WATER_DENSITY,
     DEFAULT_SAFETY_MARGIN, DEFAULT_PUMP_EFFICIENCY,
-    DEFAULT_RESIDUAL_PRESSURE, KGF_CM2_TO_METER
+    DEFAULT_RESIDUAL_PRESSURE, KGF_CM2_TO_METER,
+    VOLTAGE_3PHASE, VOLTAGE_1PHASE,
+    DEFAULT_MOTOR_SAFETY_FACTOR
 )
 
 # 로컬 모듈 임포트
 from .pipe_loss import calculate_friction_loss, calculate_velocity
+from .motor_spec import calculate_motor_power, calculate_current_3phase, calculate_current_1phase
 
 
 def calculate_standard_mode(flow_rate, static_head, pipe_loss=0, safety_margin=None,
@@ -266,6 +269,256 @@ if __name__ == "__main__":
         print(f"   잔압 환산: {result2['residual_head']:.2f} m")
         print(f"   유속: {result2['velocity']:.2f} m/s")
         print(f"   펌프 동력: {result2['pump_power']:.2f} kW")
+        
+    except ValueError as e:
+        print(f"   계산 오류: {e}")
+    
+    print("\n" + "=" * 40)
+
+
+def calculate_complete_pump_spec(mode, flow_rate, static_head, electrical_type,
+                                num_pumps=1,
+                                # 일반 양정 모드 전용
+                                pipe_loss=0,
+                                # 압송 관로 모드 전용
+                                pipe_length=None, pipe_diameter=None, pipe_material='PVC',
+                                residual_pressure=None,
+                                # 공통 옵션
+                                safety_margin=None, pump_efficiency=None,
+                                motor_safety_factor=None):
+    """
+    펌프 및 모터 사양 완전 계산 (통합 함수)
+    
+    Parameters:
+    -----------
+    mode : str
+        계산 모드 ('standard' 또는 'pressure')
+    flow_rate : float
+        유량 (㎥/hr)
+    static_head : float
+        실양정 (m)
+    electrical_type : str
+        전기 방식 ('3phase' 또는 '1phase')
+    num_pumps : int, optional
+        펌프 대수 (기본값 1)
+    
+    # 일반 양정 모드 전용
+    pipe_loss : float, optional
+        관로 손실 (m, 기본값 0)
+    
+    # 압송 관로 모드 전용
+    pipe_length : float, optional
+        압송 거리 (m, 압송 모드일 때 필수)
+    pipe_diameter : float, optional
+        관경 (mm, 압송 모드일 때 필수)
+    pipe_material : str, optional
+        관 재질 (기본값 'PVC')
+    residual_pressure : float, optional
+        잔압 (kgf/cm², 기본값 config.DEFAULT_RESIDUAL_PRESSURE)
+    
+    # 공통 옵션
+    safety_margin : float, optional
+        여유 수두 (m, 기본값 config.DEFAULT_SAFETY_MARGIN)
+    pump_efficiency : float, optional
+        펌프 효율 (기본값 config.DEFAULT_PUMP_EFFICIENCY)
+    motor_safety_factor : float, optional
+        모터 여유율 (기본값 config.DEFAULT_MOTOR_SAFETY_FACTOR)
+    
+    Returns:
+    --------
+    dict
+        통합 계산 결과 딕셔너리:
+        {
+            # 펌프 계산 결과
+            'mode': 계산모드,
+            'total_head': 전양정(m),
+            'flow_per_pump': 펌프당유량(㎥/hr),
+            'pump_power': 펌프동력(kW),
+            'efficiency': 펌프효율,
+            
+            # 모터 사양
+            'motor_power': 모터용량(kW),
+            'motor_safety_factor': 사용된여유율,
+            
+            # 전기 사양
+            'electrical_type': 전기방식,
+            'current': 전류(A),
+            'voltage': 전압(V),
+            
+            # 압송 모드 추가 정보 (압송 모드인 경우만)
+            'friction_loss': 마찰손실(m), # 압송 모드만
+            'residual_head': 잔압환산(m), # 압송 모드만
+            'velocity': 유속(m/s), # 압송 모드만
+        }
+    
+    Raises:
+    -------
+    ValueError
+        입력값이 유효하지 않을 때
+    
+    Notes:
+    ------
+    사용 예시:
+    >>> # 일반 양정 모드 + 삼상 전기
+    >>> result1 = calculate_complete_pump_spec(
+    ...     mode='standard',
+    ...     flow_rate=100,
+    ...     static_head=20,
+    ...     electrical_type='3phase',
+    ...     pipe_loss=5,
+    ...     num_pumps=2
+    ... )
+    
+    >>> # 압송 관로 모드 + 단상 전기
+    >>> result2 = calculate_complete_pump_spec(
+    ...     mode='pressure',
+    ...     flow_rate=100,
+    ...     static_head=20,
+    ...     electrical_type='1phase',
+    ...     pipe_length=500,
+    ...     pipe_diameter=150,
+    ...     pipe_material='PVC'
+    ... )
+    """
+    # 모드 유효성 검사
+    if mode not in ['standard', 'pressure']:
+        raise ValueError("mode는 'standard' 또는 'pressure'이어야 합니다.")
+    
+    # 전기 방식 유효성 검사
+    if electrical_type not in ['3phase', '1phase']:
+        raise ValueError("electrical_type은 '3phase' 또는 '1phase'이어야 합니다.")
+    
+    # 압송 모드 필수 파라미터 검사
+    if mode == 'pressure':
+        if pipe_length is None:
+            raise ValueError("압송 모드에서는 pipe_length가 필수입니다.")
+        if pipe_diameter is None:
+            raise ValueError("압송 모드에서는 pipe_diameter가 필수입니다.")
+    
+    # 1. 펌프 계산 (모드에 따라)
+    if mode == 'standard':
+        # 일반 양정 모드
+        pump_result = calculate_standard_mode(
+            flow_rate=flow_rate,
+            static_head=static_head,
+            pipe_loss=pipe_loss,
+            safety_margin=safety_margin,
+            pump_efficiency=pump_efficiency,
+            num_pumps=num_pumps
+        )
+        
+        # 압송 모드 관련 값은 None으로 설정
+        friction_loss = None
+        residual_head = None
+        velocity = None
+        
+    else:  # mode == 'pressure'
+        # 압송 관로 모드
+        pump_result = calculate_pressure_mode(
+            flow_rate=flow_rate,
+            static_head=static_head,
+            pipe_length=pipe_length,
+            pipe_diameter=pipe_diameter,
+            pipe_material=pipe_material,
+            residual_pressure=residual_pressure,
+            safety_margin=safety_margin,
+            pump_efficiency=pump_efficiency,
+            num_pumps=num_pumps
+        )
+        
+        # 압송 모드 관련 값 추출
+        friction_loss = pump_result['friction_loss']
+        residual_head = pump_result['residual_head']
+        velocity = pump_result['velocity']
+    
+    # 2. 모터 용량 계산
+    motor_power = calculate_motor_power(
+        pump_result['pump_power'],
+        safety_factor=motor_safety_factor
+    )
+    
+    # 3. 전류 계산 (전기 방식에 따라)
+    if electrical_type == '3phase':
+        current = calculate_current_3phase(motor_power)
+        voltage = VOLTAGE_3PHASE
+    else:  # '1phase'
+        current = calculate_current_1phase(motor_power)
+        voltage = VOLTAGE_1PHASE
+    
+    # 4. 결과 통합
+    result = {
+        # 펌프 계산 결과
+        'mode': mode,
+        'total_head': pump_result['total_head'],
+        'flow_per_pump': pump_result['flow_per_pump'],
+        'pump_power': pump_result['pump_power'],
+        'efficiency': pump_result['efficiency'],
+        
+        # 모터 사양
+        'motor_power': motor_power,
+        'motor_safety_factor': motor_safety_factor if motor_safety_factor is not None else DEFAULT_MOTOR_SAFETY_FACTOR,
+        
+        # 전기 사양
+        'electrical_type': electrical_type,
+        'current': current,
+        'voltage': voltage,
+    }
+    
+    # 압송 모드 추가 정보
+    if mode == 'pressure':
+        result['friction_loss'] = friction_loss
+        result['residual_head'] = residual_head
+        result['velocity'] = velocity
+    
+    return result
+
+
+# 통합 함수 테스트 예시
+if __name__ == "__main__":
+    print("\n=== 통합 함수 테스트 예시 ===")
+    
+    # 예시 1: 일반 양정 모드 + 삼상 전기
+    try:
+        print("\n1. 일반 양정 모드 + 삼상 전기:")
+        result1 = calculate_complete_pump_spec(
+            mode='standard',
+            flow_rate=100,
+            static_head=20,
+            electrical_type='3phase',
+            pipe_loss=5,
+            num_pumps=2
+        )
+        print(f"   모드: {result1['mode']}")
+        print(f"   전양정: {result1['total_head']:.2f} m")
+        print(f"   펌프 동력: {result1['pump_power']:.2f} kW")
+        print(f"   모터 용량: {result1['motor_power']:.2f} kW")
+        print(f"   전기 방식: {result1['electrical_type']}")
+        print(f"   전류: {result1['current']:.2f} A")
+        print(f"   전압: {result1['voltage']} V")
+        
+    except ValueError as e:
+        print(f"   계산 오류: {e}")
+    
+    # 예시 2: 압송 관로 모드 + 단상 전기
+    try:
+        print("\n2. 압송 관로 모드 + 단상 전기:")
+        result2 = calculate_complete_pump_spec(
+            mode='pressure',
+            flow_rate=100,
+            static_head=20,
+            electrical_type='1phase',
+            pipe_length=500,
+            pipe_diameter=150,
+            pipe_material='PVC'
+        )
+        print(f"   모드: {result2['mode']}")
+        print(f"   전양정: {result2['total_head']:.2f} m")
+        print(f"   마찰 손실: {result2['friction_loss']:.2f} m")
+        print(f"   펌프 동력: {result2['pump_power']:.2f} kW")
+        print(f"   모터 용량: {result2['motor_power']:.2f} kW")
+        print(f"   전기 방식: {result2['electrical_type']}")
+        print(f"   전류: {result2['current']:.2f} A")
+        print(f"   유속: {result2['velocity']:.2f} m/s")
         
     except ValueError as e:
         print(f"   계산 오류: {e}")
