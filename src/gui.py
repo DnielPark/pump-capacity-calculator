@@ -21,7 +21,7 @@ class PumpCalculatorGUI:
         """GUI 초기화"""
         self.root = root
         self.root.title("하수도 펌프 용량 계산기")
-        self.root.geometry("1000x700")
+        self.root.geometry("1000x800")
         self.root.resizable(True, True)
 
         # 변수 초기화
@@ -99,14 +99,14 @@ class PumpCalculatorGUI:
         title_label = ttk.Label(
             title_frame,
             text="하수도 펌프 용량 계산기",
-            font=("Helvetica", 16, "bold")
+            font=("Helvetica", 20, "bold")
         )
         title_label.pack()
 
         subtitle_label = ttk.Label(
             title_frame,
             text="일반 양정 모드와 압송 관로 모드 지원",
-            font=("Helvetica", 10)
+            font=("Helvetica", 13)
         )
         subtitle_label.pack()
 
@@ -133,9 +133,10 @@ class PumpCalculatorGUI:
         mode_frame = ttk.LabelFrame(
             parent,
             text="계산 모드 선택",
-            padding="10"
+            padding="15",
+            font=("Helvetica", 14, "bold")
         )
-        mode_frame.pack(fill=tk.X, padx=10, pady=5)
+        mode_frame.pack(fill=tk.X, padx=10, pady=8)
 
         # 라디오 버튼 프레임
         radio_frame = ttk.Frame(mode_frame)
@@ -146,60 +147,64 @@ class PumpCalculatorGUI:
             radio_frame,
             text="일반 양정 모드",
             variable=self.mode_var,
-            value='standard'
+            value='standard',
+            font=("Helvetica", 13)
         )
-        standard_radio.grid(row=0, column=0, padx=20, pady=5, sticky=tk.W)
+        standard_radio.grid(row=0, column=0, padx=25, pady=8, sticky=tk.W)
 
         # 압송 관로 모드
         pressure_radio = ttk.Radiobutton(
             radio_frame,
             text="압송 관로 모드",
             variable=self.mode_var,
-            value='pressure'
+            value='pressure',
+            font=("Helvetica", 13)
         )
-        pressure_radio.grid(row=0, column=1, padx=20, pady=5, sticky=tk.W)
+        pressure_radio.grid(row=0, column=1, padx=25, pady=8, sticky=tk.W)
 
     def create_basic_inputs(self, parent):
         """기본 정보 입력 영역 생성"""
         basic_frame = ttk.LabelFrame(
             parent,
             text="기본 정보 입력",
-            padding="10"
+            padding="15",
+            font=("Helvetica", 14, "bold")
         )
-        basic_frame.pack(fill=tk.X, padx=10, pady=5)
+        basic_frame.pack(fill=tk.X, padx=10, pady=8)
 
         # 설계 유량
-        ttk.Label(basic_frame, text="설계 유량 (㎥/hr):").grid(
-            row=0, column=0, padx=5, pady=5, sticky=tk.W
+        ttk.Label(basic_frame, text="설계 유량 (㎥/hr):", font=("Helvetica", 13)).grid(
+            row=0, column=0, padx=8, pady=8, sticky=tk.W
         )
-        flow_entry = ttk.Entry(basic_frame, textvariable=self.flow_var, width=15)
-        flow_entry.grid(row=0, column=1, padx=5, pady=5)
-        ttk.Label(basic_frame, text="예: 100").grid(
-            row=0, column=2, padx=5, pady=5, sticky=tk.W
+        flow_entry = ttk.Entry(basic_frame, textvariable=self.flow_var, width=15, font=("Helvetica", 14))
+        flow_entry.grid(row=0, column=1, padx=8, pady=8)
+        ttk.Label(basic_frame, text="예: 100", font=("Helvetica", 12)).grid(
+            row=0, column=2, padx=8, pady=8, sticky=tk.W
         )
 
         # 실양정
-        ttk.Label(basic_frame, text="실양정 (m):").grid(
-            row=1, column=0, padx=5, pady=5, sticky=tk.W
+        ttk.Label(basic_frame, text="실양정 (m):", font=("Helvetica", 13)).grid(
+            row=1, column=0, padx=8, pady=8, sticky=tk.W
         )
-        head_entry = ttk.Entry(basic_frame, textvariable=self.head_var, width=15)
-        head_entry.grid(row=1, column=1, padx=5, pady=5)
-        ttk.Label(basic_frame, text="예: 20").grid(
-            row=1, column=2, padx=5, pady=5, sticky=tk.W
+        head_entry = ttk.Entry(basic_frame, textvariable=self.head_var, width=15, font=("Helvetica", 14))
+        head_entry.grid(row=1, column=1, padx=8, pady=8)
+        ttk.Label(basic_frame, text="예: 20", font=("Helvetica", 12)).grid(
+            row=1, column=2, padx=8, pady=8, sticky=tk.W
         )
 
         # 펌프 대수
-        ttk.Label(basic_frame, text="펌프 대수:").grid(
-            row=2, column=0, padx=5, pady=5, sticky=tk.W
+        ttk.Label(basic_frame, text="펌프 대수:", font=("Helvetica", 13)).grid(
+            row=2, column=0, padx=8, pady=8, sticky=tk.W
         )
         pumps_spinbox = ttk.Spinbox(
             basic_frame,
             from_=1,
             to=5,
             textvariable=self.pumps_var,
-            width=13
+            width=13,
+            font=("Helvetica", 14)
         )
-        pumps_spinbox.grid(row=2, column=1, padx=5, pady=5)
+        pumps_spinbox.grid(row=2, column=1, padx=8, pady=8)
 
         # 일반 양정 모드: 관로 손실
         ttk.Label(basic_frame, text="관로 손실 (m):").grid(
@@ -232,17 +237,18 @@ class PumpCalculatorGUI:
         )
 
         # 압송 관로 모드: 관 재질
-        ttk.Label(basic_frame, text="관 재질:").grid(
-            row=6, column=0, padx=5, pady=5, sticky=tk.W
+        ttk.Label(basic_frame, text="관 재질:", font=("Helvetica", 13)).grid(
+            row=6, column=0, padx=8, pady=8, sticky=tk.W
         )
         material_combo = ttk.Combobox(
             basic_frame,
             textvariable=self.pipe_material_var,
             values=['PVC', 'PE', '강관', 'HDPE', '주철관'],
             width=12,
-            state='readonly'
+            state='readonly',
+            font=("Helvetica", 14)
         )
-        material_combo.grid(row=6, column=1, padx=5, pady=5)
+        material_combo.grid(row=6, column=1, padx=8, pady=8)
 
         # 옵션: 여유 수두
         ttk.Label(basic_frame, text="여유 수두 (m):").grid(
@@ -279,9 +285,10 @@ class PumpCalculatorGUI:
         electrical_frame = ttk.LabelFrame(
             parent,
             text="전기 사양 선택",
-            padding="10"
+            padding="15",
+            font=("Helvetica", 14, "bold")
         )
-        electrical_frame.pack(fill=tk.X, padx=10, pady=5)
+        electrical_frame.pack(fill=tk.X, padx=10, pady=8)
 
         # 라디오 버튼 프레임
         radio_frame = ttk.Frame(electrical_frame)
@@ -292,18 +299,20 @@ class PumpCalculatorGUI:
             radio_frame,
             text="삼상 380V",
             variable=self.electrical_var,
-            value='3phase'
+            value='3phase',
+            font=("Helvetica", 13)
         )
-        phase3_radio.grid(row=0, column=0, padx=20, pady=5, sticky=tk.W)
+        phase3_radio.grid(row=0, column=0, padx=25, pady=8, sticky=tk.W)
 
         # 단상 전기
         phase1_radio = ttk.Radiobutton(
             radio_frame,
             text="단상 220V",
             variable=self.electrical_var,
-            value='1phase'
+            value='1phase',
+            font=("Helvetica", 13)
         )
-        phase1_radio.grid(row=0, column=1, padx=20, pady=5, sticky=tk.W)
+        phase1_radio.grid(row=0, column=1, padx=25, pady=8, sticky=tk.W)
 
     def create_buttons(self, parent):
         """버튼 영역 생성"""
@@ -317,13 +326,13 @@ class PumpCalculatorGUI:
             command=self.calculate,
             bg='#3498db',
             fg='white',
-            font=('Helvetica', 10, 'bold'),
-            padx=20,
-            pady=10,
+            font=('Helvetica', 14, 'bold'),
+            padx=25,
+            pady=12,
             relief=tk.RAISED,
             borderwidth=2
         )
-        self.calc_button.pack(side=tk.LEFT, padx=10)
+        self.calc_button.pack(side=tk.LEFT, padx=15)
 
         # 새 계산 버튼
         reset_button = tk.Button(
@@ -332,13 +341,13 @@ class PumpCalculatorGUI:
             command=self.reset_inputs,
             bg='#95a5a6',
             fg='white',
-            font=('Helvetica', 10),
-            padx=20,
-            pady=10,
+            font=('Helvetica', 14),
+            padx=25,
+            pady=12,
             relief=tk.RAISED,
             borderwidth=2
         )
-        reset_button.pack(side=tk.LEFT, padx=10)
+        reset_button.pack(side=tk.LEFT, padx=15)
 
         # 종료 버튼
         exit_button = tk.Button(
@@ -347,23 +356,28 @@ class PumpCalculatorGUI:
             command=self.root.quit,
             bg='#e74c3c',
             fg='white',
-            font=('Helvetica', 10),
-            padx=20,
-            pady=10,
+            font=('Helvetica', 14),
+            padx=25,
+            pady=12,
             relief=tk.RAISED,
             borderwidth=2
         )
-        exit_button.pack(side=tk.RIGHT, padx=10)
+        exit_button.pack(side=tk.RIGHT, padx=15)
 
     def create_result_display(self, parent):
         """결과 표시 영역 생성"""
-        result_frame = ttk.Frame(parent)
+        result_frame = ttk.LabelFrame(
+            parent,
+            text="계산 결과",
+            padding="15",
+            font=("Helvetica", 14, "bold")
+        )
         result_frame.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
 
         # 결과 Text 위젯 (하나만 생성)
         self.result_text = tk.Text(
             result_frame,
-            font=('Helvetica', 11),
+            font=('Helvetica', 12),
             wrap=tk.WORD,
             bg='#f8f9fa',
             padx=20,
@@ -378,12 +392,12 @@ class PumpCalculatorGUI:
         scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
         self.result_text.configure(yscrollcommand=scrollbar.set)
 
-        # 태그 스타일 정의
-        self.result_text.tag_configure('title', font=('Helvetica', 16, 'bold'), foreground='#2c3e50')
-        self.result_text.tag_configure('section', font=('Helvetica', 12, 'bold'), foreground='#34495e')
-        self.result_text.tag_configure('label', font=('Helvetica', 11), foreground='#7f8c8d')
-        self.result_text.tag_configure('value', font=('Helvetica', 11, 'bold'), foreground='#2980b9')
-        self.result_text.tag_configure('highlight', font=('Helvetica', 12, 'bold'), foreground='#e74c3c', background='#fff5f5')
+        # 태그 스타일 정의 (글꼴 크기 증가)
+        self.result_text.tag_configure('title', font=('Helvetica', 18, 'bold'), foreground='#2c3e50')
+        self.result_text.tag_configure('section', font=('Helvetica', 14, 'bold'), foreground='#34495e')
+        self.result_text.tag_configure('label', font=('Helvetica', 12), foreground='#7f8c8d')
+        self.result_text.tag_configure('value', font=('Helvetica', 12, 'bold'), foreground='#2980b9')
+        self.result_text.tag_configure('highlight', font=('Helvetica', 14, 'bold'), foreground='#e74c3c', background='#fff5f5')
         self.result_text.tag_configure('separator', foreground='#bdc3c7')
 
         # 초기 메시지
