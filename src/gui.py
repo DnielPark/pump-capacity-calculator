@@ -96,14 +96,14 @@ class PumpCalculatorGUI:
         title_frame = ttk.Frame(self.root, padding="10")
         title_frame.pack(fill=tk.X)
 
-        title_label = ttk.Label(
+        title_label = tk.Label(
             title_frame,
             text="하수도 펌프 용량 계산기",
             font=("Helvetica", 20, "bold")
         )
         title_label.pack()
 
-        subtitle_label = ttk.Label(
+        subtitle_label = tk.Label(
             title_frame,
             text="일반 양정 모드와 압송 관로 모드 지원",
             font=("Helvetica", 13)
@@ -132,15 +132,15 @@ class PumpCalculatorGUI:
         """계산 모드 선택 영역 생성"""
         mode_frame = ttk.Frame(parent)
         mode_frame.pack(fill=tk.X, padx=10, pady=8)
-        
+
         # 제목 라벨 추가
-        title_label = ttk.Label(
+        title_label = tk.Label(
             mode_frame,
             text="계산 모드 선택",
             font=("Helvetica", 14, "bold")
         )
         title_label.pack(anchor=tk.W, padx=5, pady=(0, 10))
-        
+
         # 내용 프레임
         content_frame = ttk.Frame(mode_frame)
         content_frame.pack(fill=tk.X, padx=5, pady=5)
@@ -150,7 +150,7 @@ class PumpCalculatorGUI:
         radio_frame.pack()
 
         # 일반 양정 모드
-        standard_radio = ttk.Radiobutton(
+        standard_radio = tk.Radiobutton(
             radio_frame,
             text="일반 양정 모드",
             variable=self.mode_var,
@@ -160,7 +160,7 @@ class PumpCalculatorGUI:
         standard_radio.grid(row=0, column=0, padx=25, pady=8, sticky=tk.W)
 
         # 압송 관로 모드
-        pressure_radio = ttk.Radiobutton(
+        pressure_radio = tk.Radiobutton(
             radio_frame,
             text="압송 관로 모드",
             variable=self.mode_var,
@@ -173,44 +173,44 @@ class PumpCalculatorGUI:
         """기본 정보 입력 영역 생성"""
         basic_frame = ttk.Frame(parent)
         basic_frame.pack(fill=tk.X, padx=10, pady=8)
-        
+
         # 제목 라벨 추가
-        title_label = ttk.Label(
+        title_label = tk.Label(
             basic_frame,
             text="기본 정보 입력",
             font=("Helvetica", 14, "bold")
         )
         title_label.pack(anchor=tk.W, padx=5, pady=(0, 10))
-        
+
         # 내용 프레임
         content_frame = ttk.Frame(basic_frame)
         content_frame.pack(fill=tk.X, padx=5, pady=5)
 
         # 설계 유량
-        ttk.Label(content_frame, text="설계 유량 (㎥/hr):", font=("Helvetica", 13)).grid(
+        tk.Label(content_frame, text="설계 유량 (㎥/hr):", font=("Helvetica", 13)).grid(
             row=0, column=0, padx=8, pady=8, sticky=tk.W
         )
-        flow_entry = ttk.Entry(content_frame, textvariable=self.flow_var, width=15, font=("Helvetica", 14))
+        flow_entry = tk.Entry(content_frame, textvariable=self.flow_var, width=15, font=("Helvetica", 14))
         flow_entry.grid(row=0, column=1, padx=8, pady=8)
-        ttk.Label(content_frame, text="예: 100", font=("Helvetica", 12)).grid(
+        tk.Label(content_frame, text="예: 100", font=("Helvetica", 12)).grid(
             row=0, column=2, padx=8, pady=8, sticky=tk.W
         )
 
         # 실양정
-        ttk.Label(basic_frame, text="실양정 (m):", font=("Helvetica", 13)).grid(
+        tk.Label(basic_frame, text="실양정 (m):", font=("Helvetica", 13)).grid(
             row=1, column=0, padx=8, pady=8, sticky=tk.W
         )
-        head_entry = ttk.Entry(basic_frame, textvariable=self.head_var, width=15, font=("Helvetica", 14))
+        head_entry = tk.Entry(content_frame, textvariable=self.head_var, width=15, font=("Helvetica", 14))
         head_entry.grid(row=1, column=1, padx=8, pady=8)
-        ttk.Label(basic_frame, text="예: 20", font=("Helvetica", 12)).grid(
+        tk.Label(basic_frame, text="예: 20", font=("Helvetica", 12)).grid(
             row=1, column=2, padx=8, pady=8, sticky=tk.W
         )
 
         # 펌프 대수
-        ttk.Label(basic_frame, text="펌프 대수:", font=("Helvetica", 13)).grid(
+        tk.Label(basic_frame, text="펌프 대수:", font=("Helvetica", 13)).grid(
             row=2, column=0, padx=8, pady=8, sticky=tk.W
         )
-        pumps_spinbox = ttk.Spinbox(
+        pumps_spinbox = tk.Spinbox(
             basic_frame,
             from_=1,
             to=5,
@@ -221,76 +221,75 @@ class PumpCalculatorGUI:
         pumps_spinbox.grid(row=2, column=1, padx=8, pady=8)
 
         # 일반 양정 모드: 관로 손실
-        ttk.Label(basic_frame, text="관로 손실 (m):").grid(
+        tk.Label(basic_frame, text="관로 손실 (m):").grid(
             row=3, column=0, padx=5, pady=5, sticky=tk.W
         )
-        pipe_loss_entry = ttk.Entry(basic_frame, textvariable=self.pipe_loss_var, width=15)
+        pipe_loss_entry = tk.Entry(basic_frame, textvariable=self.pipe_loss_var, width=15)
         pipe_loss_entry.grid(row=3, column=1, padx=5, pady=5)
-        ttk.Label(basic_frame, text="일반 양정 모드용").grid(
+        tk.Label(basic_frame, text="일반 양정 모드용").grid(
             row=3, column=2, padx=5, pady=5, sticky=tk.W
         )
 
         # 압송 관로 모드: 관 길이
-        ttk.Label(basic_frame, text="압송 거리 (m):").grid(
+        tk.Label(basic_frame, text="압송 거리 (m):").grid(
             row=4, column=0, padx=5, pady=5, sticky=tk.W
         )
-        pipe_length_entry = ttk.Entry(basic_frame, textvariable=self.pipe_length_var, width=15)
+        pipe_length_entry = tk.Entry(basic_frame, textvariable=self.pipe_length_var, width=15)
         pipe_length_entry.grid(row=4, column=1, padx=5, pady=5)
-        ttk.Label(basic_frame, text="압송 모드용").grid(
+        tk.Label(basic_frame, text="압송 모드용").grid(
             row=4, column=2, padx=5, pady=5, sticky=tk.W
         )
 
         # 압송 관로 모드: 관경
-        ttk.Label(basic_frame, text="관경 (mm):").grid(
+        tk.Label(basic_frame, text="관경 (mm):").grid(
             row=5, column=0, padx=5, pady=5, sticky=tk.W
         )
-        pipe_diameter_entry = ttk.Entry(basic_frame, textvariable=self.pipe_diameter_var, width=15)
+        pipe_diameter_entry = tk.Entry(basic_frame, textvariable=self.pipe_diameter_var, width=15)
         pipe_diameter_entry.grid(row=5, column=1, padx=5, pady=5)
-        ttk.Label(basic_frame, text="예: 150").grid(
+        tk.Label(basic_frame, text="예: 150").grid(
             row=5, column=2, padx=5, pady=5, sticky=tk.W
         )
 
         # 압송 관로 모드: 관 재질
-        ttk.Label(basic_frame, text="관 재질:", font=("Helvetica", 13)).grid(
+        tk.Label(basic_frame, text="관 재질:", font=("Helvetica", 13)).grid(
             row=6, column=0, padx=8, pady=8, sticky=tk.W
         )
         material_combo = ttk.Combobox(
-            basic_frame,
+            content_frame,
             textvariable=self.pipe_material_var,
             values=['PVC', 'PE', '강관', 'HDPE', '주철관'],
             width=12,
-            state='readonly',
-            font=("Helvetica", 14)
+            state='readonly'
         )
         material_combo.grid(row=6, column=1, padx=8, pady=8)
 
         # 옵션: 여유 수두
-        ttk.Label(basic_frame, text="여유 수두 (m):").grid(
+        tk.Label(basic_frame, text="여유 수두 (m):").grid(
             row=7, column=0, padx=5, pady=5, sticky=tk.W
         )
-        safety_entry = ttk.Entry(basic_frame, textvariable=self.safety_var, width=15)
+        safety_entry = tk.Entry(basic_frame, textvariable=self.safety_var, width=15)
         safety_entry.grid(row=7, column=1, padx=5, pady=5)
-        ttk.Label(basic_frame, text="기본값: 1.5").grid(
+        tk.Label(basic_frame, text="기본값: 1.5").grid(
             row=7, column=2, padx=5, pady=5, sticky=tk.W
         )
 
         # 옵션: 펌프 효율
-        ttk.Label(basic_frame, text="펌프 효율:").grid(
+        tk.Label(basic_frame, text="펌프 효율:").grid(
             row=8, column=0, padx=5, pady=5, sticky=tk.W
         )
-        efficiency_entry = ttk.Entry(basic_frame, textvariable=self.efficiency_var, width=15)
+        efficiency_entry = tk.Entry(basic_frame, textvariable=self.efficiency_var, width=15)
         efficiency_entry.grid(row=8, column=1, padx=5, pady=5)
-        ttk.Label(basic_frame, text="기본값: 0.70").grid(
+        tk.Label(basic_frame, text="기본값: 0.70").grid(
             row=8, column=2, padx=5, pady=5, sticky=tk.W
         )
 
         # 옵션: 모터 여유율
-        ttk.Label(basic_frame, text="모터 여유율:").grid(
+        tk.Label(basic_frame, text="모터 여유율:").grid(
             row=9, column=0, padx=5, pady=5, sticky=tk.W
         )
-        motor_safety_entry = ttk.Entry(basic_frame, textvariable=self.motor_safety_var, width=15)
+        motor_safety_entry = tk.Entry(basic_frame, textvariable=self.motor_safety_var, width=15)
         motor_safety_entry.grid(row=9, column=1, padx=5, pady=5)
-        ttk.Label(basic_frame, text="기본값: 1.15").grid(
+        tk.Label(basic_frame, text="기본값: 1.15").grid(
             row=9, column=2, padx=5, pady=5, sticky=tk.W
         )
 
@@ -298,15 +297,15 @@ class PumpCalculatorGUI:
         """전기 사양 선택 영역 생성"""
         electrical_frame = ttk.Frame(parent)
         electrical_frame.pack(fill=tk.X, padx=10, pady=8)
-        
+
         # 제목 라벨 추가
-        title_label = ttk.Label(
+        title_label = tk.Label(
             electrical_frame,
             text="전기 사양 선택",
             font=("Helvetica", 14, "bold")
         )
         title_label.pack(anchor=tk.W, padx=5, pady=(0, 10))
-        
+
         # 내용 프레임
         content_frame = ttk.Frame(electrical_frame)
         content_frame.pack(fill=tk.X, padx=5, pady=5)
@@ -316,7 +315,7 @@ class PumpCalculatorGUI:
         radio_frame.pack()
 
         # 삼상 전기
-        phase3_radio = ttk.Radiobutton(
+        phase3_radio = tk.Radiobutton(
             radio_frame,
             text="삼상 380V",
             variable=self.electrical_var,
@@ -324,9 +323,9 @@ class PumpCalculatorGUI:
             font=("Helvetica", 13)
         )
         phase3_radio.grid(row=0, column=0, padx=25, pady=8, sticky=tk.W)
-
+        
         # 단상 전기
-        phase1_radio = ttk.Radiobutton(
+        phase1_radio = tk.Radiobutton(
             radio_frame,
             text="단상 220V",
             variable=self.electrical_var,
@@ -389,15 +388,15 @@ class PumpCalculatorGUI:
         """결과 표시 영역 생성"""
         result_frame = ttk.Frame(parent)
         result_frame.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
-        
+
         # 제목 라벨 추가
-        title_label = ttk.Label(
+        title_label = tk.Label(
             result_frame,
             text="계산 결과",
             font=("Helvetica", 14, "bold")
         )
         title_label.pack(anchor=tk.W, padx=5, pady=(0, 10))
-        
+
         # 내용 프레임
         content_frame = ttk.Frame(result_frame)
         content_frame.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
@@ -432,10 +431,10 @@ class PumpCalculatorGUI:
         welcome_msg = """
 
  하수도 펌프 용량 계산기
- 
+
  왼쪽 입력 폼을 채우고
  '계산하기' 버튼을 눌러주세요.
- 
+
  계산 결과가 여기에 표시됩니다.
 
 """
