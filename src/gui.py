@@ -21,7 +21,7 @@ class PumpCalculatorGUI:
         """GUI 초기화"""
         self.root = root
         self.root.title("하수도 펌프 용량 계산기")
-        self.root.geometry("600x700")
+        self.root.geometry("1000x700")
         self.root.resizable(True, True)
         
         # 변수 초기화
@@ -44,16 +44,52 @@ class PumpCalculatorGUI:
         self.efficiency_var = tk.StringVar(value='0.70')
         self.motor_safety_var = tk.StringVar(value='1.15')
         
-        # UI 생성
-        self.create_title()
-        self.create_mode_selection()
-        self.create_basic_inputs()
-        self.create_electrical_selection()
-        self.create_buttons()
-        self.create_result_display()
+        # 메인 레이아웃 생성
+        self.create_main_layout()
         
         # 모드 변경 이벤트 바인딩
         self.mode_var.trace('w', self.on_mode_changed)
+    
+    def create_main_layout(self):
+        """메인 레이아웃 생성 (좌우 분할)"""
+        # 타이틀 생성
+        self.create_title()
+        
+        # 메인 컨테이너를 좌우로 분할
+        main_container = ttk.PanedWindow(self.root, orient=tk.HORIZONTAL)
+        main_container.pack(fill=tk.BOTH, expand=True, padx=10, pady=(0, 10))
+        
+        # 왼쪽 프레임 (입력 영역) - 스크롤 가능
+        left_frame = ttk.Frame(main_container)
+        left_canvas = tk.Canvas(left_frame)
+        left_scrollbar = ttk.Scrollbar(left_frame, orient="vertical", command=left_canvas.yview)
+        left_scroll_frame = ttk.Frame(left_canvas)
+        
+        left_canvas.configure(yscrollcommand=left_scrollbar.set)
+        
+        # 스크롤바 설정
+        left_scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+        left_canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        left_canvas.create_window((0, 0), window=left_scroll_frame, anchor="nw")
+        
+        # 스크롤 프레임 업데이트 함수
+        def configure_scroll_region(event):
+            left_canvas.configure(scrollregion=left_canvas.bbox("all"))
+        
+        left_scroll_frame.bind("<Configure>", configure_scroll_region)
+        
+        # 오른쪽 프레임 (결과 영역)
+        right_frame = ttk.Frame(main_container)
+        
+        # PanedWindow에 추가
+        main_container.add(left_frame, weight=1)  # 왼쪽 40%
+        main_container.add(right_frame, weight=2)  # 오른쪽 60%
+        
+        # 왼쪽 영역 UI 생성
+        self.create_left_panel(left_scroll_frame)
+        
+        # 오른쪽 영역 UI 생성
+        self.create_right_panel(right_frame)
     
     def create_title(self):
         """타이틀 영역 생성"""
@@ -74,10 +110,28 @@ class PumpCalculatorGUI:
         )
         subtitle_label.pack()
     
-    def create_mode_selection(self):
+    def create_left_panel(self, parent):
+        """왼쪽 패널 (입력 영역) 생성"""
+        # 모드 선택
+        self.create_mode_selection(parent)
+        
+        # 기본 정보 입력
+        self.create_basic_inputs(parent)
+        
+        # 전기 사양 선택
+        self.create_electrical_selection(parent)
+        
+        # 버튼 영역
+        self.create_buttons(parent)
+    
+    def create_right_panel(self, parent):
+        """오른쪽 패널 (결과 영역) 생성"""
+        self.create_result_display(parent)
+    
+    def create_mode_selection(self, parent):
         """계산 모드 선택 영역 생성"""
         mode_frame = ttk.LabelFrame(
-            self.root,
+            parent,
             text="계산 모드 선택",
             padding="10"
         )
@@ -105,10 +159,10 @@ class PumpCalculatorGUI:
         )
         pressure_radio.grid(row=0, column=1, padx=20, pady=5, sticky=tk.W)
     
-    def create_basic_inputs(self):
+    def create_basic_inputs(self, parent):
         """기본 정보 입력 영역 생성"""
         basic_frame = ttk.LabelFrame(
-            self.root,
+            parent,
             text="기본 정보 입력",
             padding="10"
         )
@@ -220,10 +274,10 @@ class PumpCalculatorGUI:
             row=9, column=2, padx=5, pady=5, sticky=tk.W
         )
     
-    def create_electrical_selection(self):
+    def create_electrical_selection(self, parent):
         """전기 사양 선택 영역 생성"""
         electrical_frame = ttk.LabelFrame(
-            self.root,
+            parent,
             text="전기 사양 선택",
             padding="10"
         )
@@ -251,9 +305,9 @@ class PumpCalculatorGUI:
         )
         phase1_radio.grid(row=0, column=1, padx=20, pady=5, sticky=tk.W)
     
-    def create_buttons(self):
+    def create_buttons(self, parent):
         """버튼 영역 생성"""
-        button_frame = ttk.Frame(self.root, padding="10")
+        button_frame = ttk.Frame(parent, padding="10")
         button_frame.pack(fill=tk.X)
         
         # 계산하기 버튼
@@ -283,14 +337,44 @@ class PumpCalculatorGUI:
         )
         exit_button.pack(side=tk.RIGHT, padx=10)
     
-    def create_result_display(self):
+    def create_result_display(self, parent):
         """결과 표시 영역 생성"""
-        result_frame = ttk.LabelFrame(
-            self.root,
-            text="계산 결과",
-            padding="10"
+        result_frame = ttk.Frame(parent)
+        result_frame.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
+        
+        # 결과 Text 위젯
+        self.result_text = tk.Text(
+            result_frame,
+            font=('Helvetica', 11),
+            wrap=tk.WORD,
+            bg='#f8f9fa',
+            padx=20,
+            pady=20,
+            relief=tk.FLAT,
+            borderwidth=0,
+            height=30
         )
-        result_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=5)
+        self.result_text.pack(fill=tk.BOTH, expand=True)
+        
+        # 스크롤바
+        scrollbar = ttk.Scrollbar(self.result_text)
+        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+        self.result_text.config(yscrollcommand=scrollbar.set)
+        scrollbar.config(command=self.result_text.yview)
+        
+        # 태그 스타일 정의
+        self.result_text.tag_configure('title', font=('Helvetica', 16, 'bold'), foreground='#2c3e50')
+        self.result_text.tag_configure('section', font=('Helvetica', 12, 'bold'), foreground='#34495e')
+        self.result_text.tag_configure('label', font=('Helvetica', 11), foreground='#7f8c8d')
+        self.result_text.tag_configure('value', font=('Helvetica', 11, 'bold'), foreground='#2980b9')
+        self.result_text.tag_configure('highlight', font=('Helvetica', 12, 'bold'), foreground='#e74c3c', background='#fff5f5')
+        self.result_text.tag_configure('separator', foreground='#bdc3c7')
+        
+        # 초기 메시지
+        self.result_text.config(state=tk.NORMAL)
+        self.result_text.insert('1.0', "계산 결과가 여기에 표시됩니다\n\n"
+                                     "입력을 완료한 후 '계산하기' 버튼을 클릭하세요.")
+        self.result_text.config(state=tk.DISABLED)
         
         # 결과 텍스트 영역
         self.result_text = tk.Text(
@@ -430,15 +514,10 @@ class PumpCalculatorGUI:
                                  "새로운 값을 입력한 후 '계산하기' 버튼을 클릭하세요.")
     
     def display_result(self, result):
-        """결과 표시 함수"""
+        """결과 표시 함수 (태그 시스템 사용)"""
         # 결과 Text 위젯 초기화
         self.result_text.config(state=tk.NORMAL)
         self.result_text.delete('1.0', tk.END)
-        
-        # 결과 포맷팅
-        output = "=" * 50 + "\n"
-        output += " 펌프 용량 계산 결과\n"
-        output += "=" * 50 + "\n\n"
         
         # 모드 이름 변환
         mode_name = '일반 양정' if result['mode'] == 'standard' else '압송 관로'
@@ -449,25 +528,63 @@ class PumpCalculatorGUI:
         else:
             electrical_name = f'단상 {result["voltage"]}V'
         
-        output += f"계산 모드: {mode_name}\n"
-        output += f"전양정: {result['total_head']:.2f} m\n"
-        output += f"펌프당 유량: {result['flow_per_pump']:.2f} ㎥/hr\n"
-        output += f"펌프 동력: {result['pump_power']:.2f} kW\n"
-        output += f"모터 용량: {result['motor_power']:.2f} kW\n"
-        output += f"전기 방식: {electrical_name}\n"
-        output += f"전류: {result['current']:.2f} A\n"
+        # 제목
+        self.result_text.insert('1.0', '\n', 'separator')
+        self.result_text.insert('1.0', '펌프 용량 계산 결과', 'title')
+        
+        # 구분선
+        self.result_text.insert('end', '\n' + '─' * 60 + '\n\n', 'separator')
+        
+        # 기본 정보 섹션
+        self.result_text.insert('end', '기본 정보\n', 'section')
+        self.result_text.insert('end', '계산 모드: ', 'label')
+        self.result_text.insert('end', f'{mode_name}\n', 'value')
+        self.result_text.insert('end', '전기 방식: ', 'label')
+        self.result_text.insert('end', f'{electrical_name}\n\n', 'value')
+        
+        # 계산 결과 섹션
+        self.result_text.insert('end', '계산 결과\n', 'section')
+        self.result_text.insert('end', '전양정: ', 'label')
+        self.result_text.insert('end', f'{result["total_head"]:.2f} m\n', 'value')
+        self.result_text.insert('end', '펌프당 유량: ', 'label')
+        self.result_text.insert('end', f'{result["flow_per_pump"]:.2f} ㎥/hr\n', 'value')
+        
+        # 하이라이트: 펌프 동력
+        self.result_text.insert('end', '펌프 동력: ', 'label')
+        self.result_text.insert('end', f'{result["pump_power"]:.2f} kW\n', 'highlight')
+        
+        # 하이라이트: 모터 용량
+        self.result_text.insert('end', '모터 용량: ', 'label')
+        self.result_text.insert('end', f'{result["motor_power"]:.2f} kW\n', 'highlight')
+        
+        self.result_text.insert('end', '전류: ', 'label')
+        self.result_text.insert('end', f'{result["current"]:.2f} A\n\n', 'value')
         
         # 압송 모드 추가 정보
         if result['mode'] == 'pressure':
-            output += f"\n[압송 관로 상세]\n"
-            output += f"마찰 손실: {result['friction_loss']:.2f} m\n"
-            output += f"잔압 환산: {result['residual_head']:.2f} m\n"
-            output += f"유속: {result['velocity']:.2f} m/s\n"
+            self.result_text.insert('end', '압송 관로 상세\n', 'section')
+            self.result_text.insert('end', '마찰 손실: ', 'label')
+            self.result_text.insert('end', f'{result["friction_loss"]:.2f} m\n', 'value')
+            self.result_text.insert('end', '잔압 환산: ', 'label')
+            self.result_text.insert('end', f'{result["residual_head"]:.2f} m\n', 'value')
+            self.result_text.insert('end', '관내 유속: ', 'label')
+            self.result_text.insert('end', f'{result["velocity"]:.2f} m/s\n\n', 'value')
         
-        output += "\n" + "=" * 50
+        # 요약 섹션
+        self.result_text.insert('end', '요약\n', 'section')
+        if result['mode'] == 'standard':
+            self.result_text.insert('end', f'• {mode_name} 모드로 계산되었습니다.\n', 'label')
+            self.result_text.insert('end', f'• 권장 모터: {result["motor_power"]:.2f} kW\n', 'label')
+        else:
+            self.result_text.insert('end', f'• {mode_name} 모드로 계산되었습니다.\n', 'label')
+            self.result_text.insert('end', f'• 마찰 손실: {result["friction_loss"]:.2f} m\n', 'label')
+            self.result_text.insert('end', f'• 권장 모터: {result["motor_power"]:.2f} kW\n', 'label')
         
-        # 결과 표시
-        self.result_text.insert('1.0', output)
+        # 구분선
+        self.result_text.insert('end', '\n' + '─' * 60 + '\n', 'separator')
+        
+        # 스크롤을 맨 위로
+        self.result_text.see('1.0')
         self.result_text.config(state=tk.DISABLED)
     
     def show_error(self, message):
