@@ -21,7 +21,7 @@ class PumpCalculatorGUI:
         """GUI 초기화"""
         self.root = root
         self.root.title("하수도 펌프 용량 계산기")
-        self.root.geometry("900x850")
+        self.root.geometry("1100x850")
         self.root.resizable(True, True)
 
         # 변수 초기화
@@ -82,8 +82,8 @@ class PumpCalculatorGUI:
         right_frame = ttk.Frame(main_container)
 
         # PanedWindow에 추가
-        main_container.add(left_frame, weight= 500)  # 왼쪽 40%
-        main_container.add(right_frame, weight= 400)  # 오른쪽 60%
+        main_container.add(left_frame, weight=700)  # 왼쪽 700
+        main_container.add(right_frame, weight=400)  # 오른쪽 400
 
         # 왼쪽 영역 UI 생성
         self.create_left_panel(left_scroll_frame)
