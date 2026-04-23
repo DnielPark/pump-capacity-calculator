@@ -310,30 +310,48 @@ class PumpCalculatorGUI:
         button_frame = ttk.Frame(parent, padding="10")
         button_frame.pack(fill=tk.X)
         
-        # 계산하기 버튼
-        calculate_button = ttk.Button(
+        # 계산하기 버튼 (강조)
+        self.calc_button = tk.Button(
             button_frame,
             text="계산하기",
             command=self.calculate,
-            width=15
+            bg='#3498db',
+            fg='white',
+            font=('Helvetica', 10, 'bold'),
+            padx=20,
+            pady=10,
+            relief=tk.RAISED,
+            borderwidth=2
         )
-        calculate_button.pack(side=tk.LEFT, padx=10)
+        self.calc_button.pack(side=tk.LEFT, padx=10)
         
         # 새 계산 버튼
-        reset_button = ttk.Button(
+        reset_button = tk.Button(
             button_frame,
             text="새 계산",
             command=self.reset_inputs,
-            width=15
+            bg='#95a5a6',
+            fg='white',
+            font=('Helvetica', 10),
+            padx=20,
+            pady=10,
+            relief=tk.RAISED,
+            borderwidth=2
         )
         reset_button.pack(side=tk.LEFT, padx=10)
         
         # 종료 버튼
-        exit_button = ttk.Button(
+        exit_button = tk.Button(
             button_frame,
             text="종료",
             command=self.root.quit,
-            width=15
+            bg='#e74c3c',
+            fg='white',
+            font=('Helvetica', 10),
+            padx=20,
+            pady=10,
+            relief=tk.RAISED,
+            borderwidth=2
         )
         exit_button.pack(side=tk.RIGHT, padx=10)
     
@@ -370,10 +388,21 @@ class PumpCalculatorGUI:
         self.result_text.tag_configure('highlight', font=('Helvetica', 12, 'bold'), foreground='#e74c3c', background='#fff5f5')
         self.result_text.tag_configure('separator', foreground='#bdc3c7')
         
-        # 초기 메시지
+        # 초기 메시지 개선
+        welcome_msg = """
+
+
+ 👋 환영합니다!
+ 
+ 왼쪽 입력 폼을 채우고
+ '계산하기' 버튼을 눌러주세요.
+ 
+ 계산 결과가 여기에 표시됩니다.
+
+
+"""
         self.result_text.config(state=tk.NORMAL)
-        self.result_text.insert('1.0', "계산 결과가 여기에 표시됩니다\n\n"
-                                     "입력을 완료한 후 '계산하기' 버튼을 클릭하세요.")
+        self.result_text.insert('1.0', welcome_msg, 'section')
         self.result_text.config(state=tk.DISABLED)
         
         # 결과 텍스트 영역
@@ -514,74 +543,57 @@ class PumpCalculatorGUI:
                                  "새로운 값을 입력한 후 '계산하기' 버튼을 클릭하세요.")
     
     def display_result(self, result):
-        """결과 표시 함수 (태그 시스템 사용)"""
-        # 결과 Text 위젯 초기화
+        """결과 표시 함수"""
         self.result_text.config(state=tk.NORMAL)
         self.result_text.delete('1.0', tk.END)
         
-        # 모드 이름 변환
-        mode_name = '일반 양정' if result['mode'] == 'standard' else '압송 관로'
-        
-        # 전기 방식 이름 변환
-        if result['electrical_type'] == '3phase':
-            electrical_name = f'삼상 {result["voltage"]}V'
-        else:
-            electrical_name = f'단상 {result["voltage"]}V'
-        
-        # 제목
-        self.result_text.insert('1.0', '\n', 'separator')
-        self.result_text.insert('1.0', '펌프 용량 계산 결과', 'title')
+        # 타이틀
+        self.result_text.insert(tk.END, "펌프 용량 계산 결과\n\n", 'title')
         
         # 구분선
-        self.result_text.insert('end', '\n' + '─' * 60 + '\n\n', 'separator')
+        self.result_text.insert(tk.END, "─" * 50 + "\n\n", 'separator')
         
         # 기본 정보 섹션
-        self.result_text.insert('end', '기본 정보\n', 'section')
-        self.result_text.insert('end', '계산 모드: ', 'label')
-        self.result_text.insert('end', f'{mode_name}\n', 'value')
-        self.result_text.insert('end', '전기 방식: ', 'label')
-        self.result_text.insert('end', f'{electrical_name}\n\n', 'value')
+        self.result_text.insert(tk.END, "📋 기본 정보\n", 'section')
         
-        # 계산 결과 섹션
-        self.result_text.insert('end', '계산 결과\n', 'section')
-        self.result_text.insert('end', '전양정: ', 'label')
-        self.result_text.insert('end', f'{result["total_head"]:.2f} m\n', 'value')
-        self.result_text.insert('end', '펌프당 유량: ', 'label')
-        self.result_text.insert('end', f'{result["flow_per_pump"]:.2f} ㎥/hr\n', 'value')
+        # 모드 이름 변환
+        mode_name = '일반 양정' if result['mode'] == 'standard' else '압송 관로'
+        self.insert_result_line("계산 모드", mode_name)
         
-        # 하이라이트: 펌프 동력
-        self.result_text.insert('end', '펌프 동력: ', 'label')
-        self.result_text.insert('end', f'{result["pump_power"]:.2f} kW\n', 'highlight')
+        # 펌프 대수 (기본값 1)
+        num_pumps = result.get('num_pumps', 1)
+        self.insert_result_line("펌프 대수", f"{num_pumps}대")
+        self.result_text.insert(tk.END, "\n")
         
-        # 하이라이트: 모터 용량
-        self.result_text.insert('end', '모터 용량: ', 'label')
-        self.result_text.insert('end', f'{result["motor_power"]:.2f} kW\n', 'highlight')
+        # 주요 결과 섹션 (강조)
+        self.result_text.insert(tk.END, "⚡️ 주요 계산 결과\n", 'section')
+        self.insert_result_line("전양정", f"{result['total_head']:.2f} m", highlight=True)
+        self.insert_result_line("펌프당 유량", f"{result['flow_per_pump']:.2f} ㎥/hr")
+        self.insert_result_line("펌프 동력", f"{result['pump_power']:.2f} kW", highlight=True)
+        self.insert_result_line("펌프 효율", f"{result['efficiency']*100:.0f}%")
+        self.result_text.insert(tk.END, "\n")
         
-        self.result_text.insert('end', '전류: ', 'label')
-        self.result_text.insert('end', f'{result["current"]:.2f} A\n\n', 'value')
+        # 모터 사양 섹션
+        self.result_text.insert(tk.END, "🔌 모터 사양\n", 'section')
+        self.insert_result_line("모터 용량", f"{result['motor_power']:.2f} kW", highlight=True)
+        self.insert_result_line("모터 여유율", f"{result['motor_safety_factor']}")
+        
+        # 전기 방식
+        electrical_str = "삼상 380V" if result['electrical_type'] == '3phase' else "단상 220V"
+        self.insert_result_line("전기 방식", electrical_str)
+        self.insert_result_line("전류", f"{result['current']:.2f} A", highlight=True)
+        self.result_text.insert(tk.END, "\n")
         
         # 압송 모드 추가 정보
-        if result['mode'] == 'pressure':
-            self.result_text.insert('end', '압송 관로 상세\n', 'section')
-            self.result_text.insert('end', '마찰 손실: ', 'label')
-            self.result_text.insert('end', f'{result["friction_loss"]:.2f} m\n', 'value')
-            self.result_text.insert('end', '잔압 환산: ', 'label')
-            self.result_text.insert('end', f'{result["residual_head"]:.2f} m\n', 'value')
-            self.result_text.insert('end', '관내 유속: ', 'label')
-            self.result_text.insert('end', f'{result["velocity"]:.2f} m/s\n\n', 'value')
+        if 'friction_loss' in result:
+            self.result_text.insert(tk.END, "🔧 압송 관로 상세\n", 'section')
+            self.insert_result_line("마찰 손실", f"{result['friction_loss']:.2f} m")
+            self.insert_result_line("잔압 환산", f"{result['residual_head']:.2f} m")
+            self.insert_result_line("유속", f"{result['velocity']:.2f} m/s")
+            self.result_text.insert(tk.END, "\n")
         
-        # 요약 섹션
-        self.result_text.insert('end', '요약\n', 'section')
-        if result['mode'] == 'standard':
-            self.result_text.insert('end', f'• {mode_name} 모드로 계산되었습니다.\n', 'label')
-            self.result_text.insert('end', f'• 권장 모터: {result["motor_power"]:.2f} kW\n', 'label')
-        else:
-            self.result_text.insert('end', f'• {mode_name} 모드로 계산되었습니다.\n', 'label')
-            self.result_text.insert('end', f'• 마찰 손실: {result["friction_loss"]:.2f} m\n', 'label')
-            self.result_text.insert('end', f'• 권장 모터: {result["motor_power"]:.2f} kW\n', 'label')
-        
-        # 구분선
-        self.result_text.insert('end', '\n' + '─' * 60 + '\n', 'separator')
+        # 하단 구분선
+        self.result_text.insert(tk.END, "─" * 50 + "\n", 'separator')
         
         # 스크롤을 맨 위로
         self.result_text.see('1.0')
@@ -591,6 +603,14 @@ class PumpCalculatorGUI:
         """에러 메시지 표시"""
         from tkinter import messagebox
         messagebox.showerror("오류", message)
+    
+    def insert_result_line(self, label, value, highlight=False):
+        """결과 라인 삽입 헬퍼 함수"""
+        self.result_text.insert(tk.END, f" {label}: ", 'label')
+        if highlight:
+            self.result_text.insert(tk.END, f"{value}\n", 'highlight')
+        else:
+            self.result_text.insert(tk.END, f"{value}\n", 'value')
     
     def reset_inputs(self):
         """입력 필드 초기화"""
@@ -608,10 +628,21 @@ class PumpCalculatorGUI:
         self.electrical_var.set('3phase')
         
         # 결과 영역 초기화
+        welcome_msg = """
+
+
+ 👋 환영합니다!
+ 
+ 왼쪽 입력 폼을 채우고
+ '계산하기' 버튼을 눌러주세요.
+ 
+ 계산 결과가 여기에 표시됩니다.
+
+
+"""
         self.result_text.config(state=tk.NORMAL)
         self.result_text.delete('1.0', tk.END)
-        self.result_text.insert('1.0', "계산 결과가 여기에 표시됩니다\n\n"
-                                     "입력을 완료한 후 '계산하기' 버튼을 클릭하세요.")
+        self.result_text.insert('1.0', welcome_msg, 'section')
         self.result_text.config(state=tk.DISABLED)
 
 
