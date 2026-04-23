@@ -130,16 +130,23 @@ class PumpCalculatorGUI:
 
     def create_mode_selection(self, parent):
         """계산 모드 선택 영역 생성"""
-        mode_frame = ttk.LabelFrame(
-            parent,
+        mode_frame = ttk.Frame(parent)
+        mode_frame.pack(fill=tk.X, padx=10, pady=8)
+        
+        # 제목 라벨 추가
+        title_label = ttk.Label(
+            mode_frame,
             text="계산 모드 선택",
-            padding="15",
             font=("Helvetica", 14, "bold")
         )
-        mode_frame.pack(fill=tk.X, padx=10, pady=8)
+        title_label.pack(anchor=tk.W, padx=5, pady=(0, 10))
+        
+        # 내용 프레임
+        content_frame = ttk.Frame(mode_frame)
+        content_frame.pack(fill=tk.X, padx=5, pady=5)
 
         # 라디오 버튼 프레임
-        radio_frame = ttk.Frame(mode_frame)
+        radio_frame = ttk.Frame(content_frame)
         radio_frame.pack()
 
         # 일반 양정 모드
@@ -164,21 +171,28 @@ class PumpCalculatorGUI:
 
     def create_basic_inputs(self, parent):
         """기본 정보 입력 영역 생성"""
-        basic_frame = ttk.LabelFrame(
-            parent,
+        basic_frame = ttk.Frame(parent)
+        basic_frame.pack(fill=tk.X, padx=10, pady=8)
+        
+        # 제목 라벨 추가
+        title_label = ttk.Label(
+            basic_frame,
             text="기본 정보 입력",
-            padding="15",
             font=("Helvetica", 14, "bold")
         )
-        basic_frame.pack(fill=tk.X, padx=10, pady=8)
+        title_label.pack(anchor=tk.W, padx=5, pady=(0, 10))
+        
+        # 내용 프레임
+        content_frame = ttk.Frame(basic_frame)
+        content_frame.pack(fill=tk.X, padx=5, pady=5)
 
         # 설계 유량
-        ttk.Label(basic_frame, text="설계 유량 (㎥/hr):", font=("Helvetica", 13)).grid(
+        ttk.Label(content_frame, text="설계 유량 (㎥/hr):", font=("Helvetica", 13)).grid(
             row=0, column=0, padx=8, pady=8, sticky=tk.W
         )
-        flow_entry = ttk.Entry(basic_frame, textvariable=self.flow_var, width=15, font=("Helvetica", 14))
+        flow_entry = ttk.Entry(content_frame, textvariable=self.flow_var, width=15, font=("Helvetica", 14))
         flow_entry.grid(row=0, column=1, padx=8, pady=8)
-        ttk.Label(basic_frame, text="예: 100", font=("Helvetica", 12)).grid(
+        ttk.Label(content_frame, text="예: 100", font=("Helvetica", 12)).grid(
             row=0, column=2, padx=8, pady=8, sticky=tk.W
         )
 
@@ -282,16 +296,23 @@ class PumpCalculatorGUI:
 
     def create_electrical_selection(self, parent):
         """전기 사양 선택 영역 생성"""
-        electrical_frame = ttk.LabelFrame(
-            parent,
+        electrical_frame = ttk.Frame(parent)
+        electrical_frame.pack(fill=tk.X, padx=10, pady=8)
+        
+        # 제목 라벨 추가
+        title_label = ttk.Label(
+            electrical_frame,
             text="전기 사양 선택",
-            padding="15",
             font=("Helvetica", 14, "bold")
         )
-        electrical_frame.pack(fill=tk.X, padx=10, pady=8)
+        title_label.pack(anchor=tk.W, padx=5, pady=(0, 10))
+        
+        # 내용 프레임
+        content_frame = ttk.Frame(electrical_frame)
+        content_frame.pack(fill=tk.X, padx=5, pady=5)
 
         # 라디오 버튼 프레임
-        radio_frame = ttk.Frame(electrical_frame)
+        radio_frame = ttk.Frame(content_frame)
         radio_frame.pack()
 
         # 삼상 전기
@@ -366,17 +387,24 @@ class PumpCalculatorGUI:
 
     def create_result_display(self, parent):
         """결과 표시 영역 생성"""
-        result_frame = ttk.LabelFrame(
-            parent,
+        result_frame = ttk.Frame(parent)
+        result_frame.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
+        
+        # 제목 라벨 추가
+        title_label = ttk.Label(
+            result_frame,
             text="계산 결과",
-            padding="15",
             font=("Helvetica", 14, "bold")
         )
-        result_frame.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
+        title_label.pack(anchor=tk.W, padx=5, pady=(0, 10))
+        
+        # 내용 프레임
+        content_frame = ttk.Frame(result_frame)
+        content_frame.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
 
         # 결과 Text 위젯 (하나만 생성)
         self.result_text = tk.Text(
-            result_frame,
+            content_frame,
             font=('Helvetica', 12),
             wrap=tk.WORD,
             bg='#f8f9fa',
@@ -388,7 +416,7 @@ class PumpCalculatorGUI:
         self.result_text.pack(fill=tk.BOTH, expand=True)
 
         # 스크롤바
-        scrollbar = ttk.Scrollbar(result_frame, orient="vertical", command=self.result_text.yview)
+        scrollbar = ttk.Scrollbar(content_frame, orient="vertical", command=self.result_text.yview)
         scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
         self.result_text.configure(yscrollcommand=scrollbar.set)
 
